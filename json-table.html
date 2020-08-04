@@ -34,9 +34,12 @@
       <div class="prose max-w-full">
         <div class="py-2 sticky top-0 bg-white">
           <div>{{ status }}</div>
-          <div v-if="data">Viewing page {{ page + 1 }} of {{ totalPages }}</div>
+          <div v-if="data">
+            Viewing rows {{ offset + 1 }} – {{ Math.min(total, offset + limit)
+            }}.
+          </div>
         </div>
-        <table v-if="data">
+        <table v-if="data" ref="table">
           <thead>
             <tr>
               <th>#</th>
@@ -45,7 +48,7 @@
           </thead>
           <tbody>
             <tr v-for="(row, index) in slice" :key="index">
-              <th scope="row">{{ index + numberOffset }}</th>
+              <th scope="row">{{ index + offset + 1 }}</th>
               <td>{{ row }}</td>
             </tr>
           </tbody>
@@ -73,31 +76,76 @@
       const app = Vue.createApp({
         setup() {
           const data = Vue.shallowRef(null)
-          const page = Vue.ref(0)
-          const perPage = Vue.ref(20)
-          const totalPages = Vue.computed(() => {
-            return data && Math.ceil(data.value.length / perPage.value)
+          const offset = Vue.ref(0)
+          const table = Vue.ref(null)
+          const limit = Vue.ref(20)
+          const total = Vue.computed(() => {
+            return data ? data.value.length : 0
           })
           const slice = Vue.computed(() => {
             return (
-              data &&
-              data.value.slice(
-                page.value * perPage.value,
-                (page.value + 1) * perPage.value,
-              )
+              data && data.value.slice(offset.value, offset.value + limit.value)
             )
           })
-          const numberOffset = Vue.computed(() => {
-            return page.value * perPage.value + 1
+
+          const mode = Vue.ref('expand')
+          const targetUp = Vue.ref(null)
+          let queued
+
+          Vue.watch([offset, table], () => {
+            mode.value = 'expand'
+            if (!queued) queued = setTimeout(updateLimit)
           })
+
+          const updateLimit = () => {
+            if (!table.value) return
+            queued = null
+            if (mode.value === 'expand') {
+              if (table.value.offsetHeight <= 720) {
+                limit.value++
+                if (!queued) queued = setTimeout(updateLimit)
+              } else {
+                mode.value = 'collapse'
+                if (!queued) queued = setTimeout(updateLimit)
+              }
+            } else if (mode.value === 'collapse') {
+              if (table.value.offsetHeight > 720 && limit.value > 1) {
+                limit.value--
+                if (!queued) queued = setTimeout(updateLimit)
+              } else if (
+                targetUp.value != null &&
+                offset.value + limit.value > targetUp.value &&
+                offset.value > 0
+              ) {
+                offset.value -= 1
+              } else {
+                targetUp.value = null
+                mode.value = 'stall'
+              }
+            }
+          }
+
+          Vue.onMounted(() => {
+            updateLimit()
+            window.onkeydown = (e) => {
+              if (e.key === 'j') {
+                offset.value += limit.value
+              } else if (e.key === 'k') {
+                targetUp.value = offset.value
+                offset.value -= 1
+                if (offset.value < 0) offset.value = 0
+              }
+            }
+          })
+
           return {
             status: Vue.ref('Initializing...'),
             data,
-            page,
-            perPage,
-            totalPages,
             slice,
-            numberOffset,
+            offset,
+            limit,
+            total,
+            table,
           }
         },
       })
