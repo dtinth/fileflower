@@ -40,6 +40,7 @@
             return
           }
           setStatus('Loaded ' + doc.value.name + ' from local cache.')
+          parent.postMessage({ output: { file: doc.value } }, '*')
         } catch (error) {
           setStatus('Failed to load file from local cache: ' + error)
           console.error(error)
