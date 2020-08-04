@@ -33,7 +33,7 @@
           title: 'json-table',
           inputs: [],
           outputs: [],
-          height: 480,
+          height: 840,
           inputConfiguration: {
             file: 'cache:file',
           },
