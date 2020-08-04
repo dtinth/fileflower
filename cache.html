@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local cache module</title>
+  </head>
+  <body>
+    <p>This module caches the input blob inside IndexedDB.</p>
+    <div id="statusEl">Loading...</div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/dexie@3.0.2/dist/dexie.min.js"
+      integrity="sha256-4A5CdqEd+Qy6BTx4yGe39GXljZ7dNzr/pyT+J4hbHsw="
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const db = new Dexie('fileflower-local-cache-module')
+      db.version(1).stores({ kv: 'key' })
+
+      const setStatus = (x) => {
+        statusEl.textContent = x
+      }
+
+      parent.postMessage(
+        {
+          register: {
+            title: document.title,
+            inputs: ['file'],
+            outputs: ['file'],
+          },
+        },
+        '*',
+      )
+
+      const loadFromDb = async () => {
+        try {
+          const doc = await db.kv.get('file')
+          if (!doc) {
+            setStatus('No file is stored in local cache.')
+            return
+          }
+          setStatus('Loaded ' + doc.value.name + ' from local cache.')
+        } catch (error) {
+          setStatus('Failed to load file from local cache: ' + error)
+          console.error(error)
+        }
+      }
+
+      onmessage = async (e) => {
+        if (e.data.input) {
+          const file = e.data.input.file
+          if (file) {
+            setStatus('Saving ' + file.name + ' to local cache...')
+            try {
+              await db.kv.put({ key: 'file', value: file })
+              await loadFromDb()
+            } catch (error) {
+              setStatus(
+                'Failed to save ' + file.name + ' to local cache: ' + error,
+              )
+              console.error(error)
+            }
+          }
+        }
+      }
+
+      loadFromDb()
+    </script>
+  </body>
+</html>
