@@ -29,11 +29,22 @@
       crossorigin="anonymous"
     />
   </head>
-  <body class="p-2">
-    <p>This whee.</p>
-    <div id="statusEl">Loading...</div>
-    <div class="prose max-w-full">
-      <table></table>
+  <body class="px-2">
+    <div id="app">
+      <div class="prose max-w-full">
+        <div class="py-2 sticky top-0 bg-white">
+          <div>{{ status }}</div>
+          <div v-if="data">Viewing page {{ page + 1 }} of {{ totalPages }}</div>
+        </div>
+        <table v-if="data">
+          <tbody>
+            <tr v-for="(row, index) in slice" :key="index">
+              <th scope="row">{{ index + numberOffset }}</th>
+              <td>{{ row }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <script
       src="https://cdn.jsdelivr.net/npm/vue@3.0.0-rc.5/dist/vue.global.js"
@@ -52,8 +63,43 @@
         '*',
       )
 
+      /// <reference types="./types" />
+      const app = Vue.createApp({
+        setup() {
+          const data = Vue.shallowRef(null)
+          const page = Vue.ref(0)
+          const perPage = Vue.ref(20)
+          const totalPages = Vue.computed(() => {
+            return data && Math.ceil(data.value.length / perPage.value)
+          })
+          const slice = Vue.computed(() => {
+            return (
+              data &&
+              data.value.slice(
+                page.value * perPage.value,
+                (page.value + 1) * perPage.value,
+              )
+            )
+          })
+          const numberOffset = Vue.computed(() => {
+            return page.value * perPage.value + 1
+          })
+          return {
+            status: Vue.ref('Initializing...'),
+            data,
+            page,
+            perPage,
+            totalPages,
+            slice,
+            numberOffset,
+          }
+        },
+      })
+
+      const vm = app.mount('#app')
+
       const setStatus = (x) => {
-        statusEl.textContent = x
+        vm.status = x
       }
 
       onmessage = async (e) => {
@@ -71,6 +117,7 @@
               return
             }
             setStatus('Read ' + data.length + ' records.')
+            vm.data = data
           } catch (error) {
             setStatus(`Failed: ${error}`)
             console.error(error)
