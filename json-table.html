@@ -37,6 +37,12 @@
           <div v-if="data">Viewing page {{ page + 1 }} of {{ totalPages }}</div>
         </div>
         <table v-if="data">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Contents</th>
+            </tr>
+          </thead>
           <tbody>
             <tr v-for="(row, index) in slice" :key="index">
               <th scope="row">{{ index + numberOffset }}</th>
