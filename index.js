@@ -10,20 +10,33 @@
         {
           _id: 'file',
           url: 'file.html',
-          title: 'File',
+          title: 'file',
           inputs: [],
-          output: [],
-          height: 64,
+          outputs: [],
+          height: 96,
           inputConfiguration: {},
         },
         {
           _id: 'cache',
           url: 'cache.html',
-          title: 'Cache',
+          title: 'cache',
           inputs: [],
-          output: [],
-          height: 64,
-          inputConfiguration: {},
+          outputs: [],
+          height: 96,
+          inputConfiguration: {
+            file: 'file:file',
+          },
+        },
+        {
+          _id: 'json-table',
+          url: 'json-table.html',
+          title: 'json-table',
+          inputs: [],
+          outputs: [],
+          height: 480,
+          inputConfiguration: {
+            file: 'cache:file',
+          },
         },
       ])
       const outputBlobs = Vue.reactive({})
@@ -128,7 +141,12 @@
           ></output-widget>
         </div>
       </div>
-      <iframe class="w-full" :src="module.url" ref="iframe"></iframe>
+      <iframe
+        :height="module.height"
+        class="w-full"
+        :src="module.url"
+        ref="iframe"
+      ></iframe>
     </section>`,
   })
 
@@ -186,5 +204,5 @@
     </span>`,
   })
 
-  app.mount('#app')
+  Object.assign(window, { vm: app.mount('#app') })
 }

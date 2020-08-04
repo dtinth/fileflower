@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON table module</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@1.6.2/dist/base.min.css"
+      integrity="sha256-ssLR+FMaogZBsdMJRkhlQqndXF0uoEd5BArJz/ftia4="
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@1.6.2/dist/components.min.css"
+      integrity="sha256-8n6uuc2/UKJdr+2vLhORSI0Jc7bIY9nOpbZp2kmYZ8Y="
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.2.0/dist/typography.min.css"
+      integrity="sha256-Bzpo9sIAOqjJGDQ0XjfcgkXcGq01xeaudbvMA10ojDw="
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@1.6.2/dist/utilities.min.css"
+      integrity="sha256-1xEMVyf5Obn9PZAEuVHiXzL4+QSO8bevhpynv2LgQUg="
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="p-2">
+    <p>This whee.</p>
+    <div id="statusEl">Loading...</div>
+    <div class="prose max-w-full">
+      <table></table>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/vue@3.0.0-rc.5/dist/vue.global.js"
+      integrity="sha256-mYrFFuhl9a7dhhIglG0BXjgCHrvV0Kol3TTbnnfghe4="
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      parent.postMessage(
+        {
+          register: {
+            title: document.title,
+            inputs: ['file'],
+            outputs: [],
+          },
+        },
+        '*',
+      )
+
+      const setStatus = (x) => {
+        statusEl.textContent = x
+      }
+
+      onmessage = async (e) => {
+        if (e.data.input) {
+          const file = e.data.input.file
+          if (!file) {
+            setStatus('No input file')
+            return
+          }
+          setStatus('Reading ' + file.name)
+          try {
+            const data = JSON.parse(await file.text())
+            if (!Array.isArray(data)) {
+              setStatus('Not an array.')
+              return
+            }
+            setStatus('Read ' + data.length + ' records.')
+          } catch (error) {
+            setStatus(`Failed: ${error}`)
+            console.error(error)
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
