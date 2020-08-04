@@ -36,7 +36,7 @@
           <div>{{ status }}</div>
           <div v-if="data">
             Viewing rows {{ offset + 1 }} – {{ Math.min(total, offset + limit)
-            }}.
+            }}. (Use <kbd>j</kbd> and <kbd>k</kbd> to navigate.)
           </div>
         </div>
         <table v-if="data" ref="table">
